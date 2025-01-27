@@ -29,6 +29,7 @@ from .const import (
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 from .pyvesync_fan import humid_features, air_features
+
 _LOGGER = logging.getLogger(__name__)
 
 FAN_MODE_AUTO = "auto"

@@ -8,6 +8,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""

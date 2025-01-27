@@ -594,6 +594,7 @@ class VeSyncOutletV2(VeSyncOutlet):
     def __init__(self, details, manager):
         """Initialize bypassV2 smart plug class."""
         super().__init__(details, manager, False)
+        self.connection_status = 'online' # assume online -> workaround.
 
     def get_body_v2(self) -> dict:
         body = Helpers.req_body(self.manager, ('bypassV2'))
@@ -614,12 +615,14 @@ class VeSyncOutletV2(VeSyncOutlet):
                 return code, None
             logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - wrong argument')
             return None, (code['code'], 'wrong argument')
-
-        err_code = response['code']
-        err_msg  = response['msg']
-        if (err_code != -11300030):
-            logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - {err_msg} ({err_code})')
-        return None, (err_code, err_msg)
+        if response:
+            err_code = response['code']
+            err_msg  = response['msg']
+            if (err_code != -11300030):
+                logger.error(f'Failed {self.device_name}::{body["payload"]["method"]} - {err_msg} ({err_code})')
+            return None, (err_code, err_msg)
+        self.connection_status = 'offline'
+        return None, (-1, "offline")
 
 
 class VeSyncOutletBSDGO1(VeSyncOutletV2):
@@ -695,9 +698,9 @@ class VeSyncOutletWYSMTOD16A(VeSyncOutletV2):
             self.details['power']   = properties.get('realTimePower', 0)
             self.details['current'] = properties.get('realTimeCurrent', 0)
             self.details['energy'] = properties.get('electricalEnergy', 0)
-            self.connection_status == 'online'
+            self.connection_status = 'online'
             return True
-        self.connection_status == 'offline'
+        self.connection_status = 'offline'
         return False
 
 #    def get_energy(self, period) -> dict:
