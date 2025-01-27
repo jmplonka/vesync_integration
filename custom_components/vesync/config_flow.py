@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from .pyvesync import VeSync
+from pyvesync import VeSync
 
 import voluptuous as vol
 

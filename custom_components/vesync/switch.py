@@ -3,9 +3,13 @@
 import logging
 from typing import Any
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import (
+    SwitchEntity,
+    SwitchDeviceClass,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import HomeAssistant, callback
@@ -16,9 +20,23 @@ from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 from .pyvesync_outlet import outlet_config
+from .pyvesync_switch import feature_dict
 
 _LOGGER = logging.getLogger(__name__)
 
+OUTLET = SwitchEntityDescription(
+    key="smartSocket",
+    device_class=SwitchDeviceClass.OUTLET,
+    name="Switch",
+    icon="mdi:power-socket-de"
+)
+
+SWITCH = SwitchEntityDescription(
+    key="smartSwitch",
+    device_class=SwitchDeviceClass.SWITCH,
+    name="Switch",
+    icon="mdi:light-switch"
+)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,9 +69,9 @@ def _setup_entities(
     entities: list[VeSyncBaseSwitch] = []
     for dev in devices:
         if (dev.device_type in outlet_config):
-            entities.append(VeSyncSwitchEntity(dev, coordinator, "mdi:power-socket-de"))
+            entities.append(VeSyncSwitchEntity(dev, coordinator, OUTLET))
         elif (dev.device_type in feature_dict):
-            entities.append(VeSyncSwitchEntity(dev, coordinator, "mdi:toggle-switch-variant-off"))
+            entities.append(VeSyncSwitchEntity(dev, coordinator, SWITCH))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -61,24 +79,17 @@ def _setup_entities(
 class VeSyncSwitchEntity(VeSyncBaseEntity, SwitchEntity):
     """Representation of a VeSync outlet or switch."""
 
-    _attr_name = EntityCategory.CONFIG
+    _attr_name = None
 
     def __init__(
         self,
         device: VeSyncBaseDevice,
         coordinator: VeSyncDataCoordinator,
-        icon_on: str,
-        icon_off: str = None
+        description: SwitchEntityDescription
     ) -> None:
         """Initialize Base Switch device class."""
         super().__init__(device, coordinator)
-        self.icon_on  = icon_on
-        self.icon_off = icon_on if (icon_off is None) else icon_off
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the entity."""
-        return self.icon_on if self.is_on else self.icon_off
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:

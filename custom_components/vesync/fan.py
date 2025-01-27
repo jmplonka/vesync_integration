@@ -6,7 +6,7 @@ import logging
 import math
 from typing import Any
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +28,6 @@ from .const import (
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
-from .pyvesync_fan import humid_features, air_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,8 +88,8 @@ def _setup_entities(
     """Check if device is fan and add entity."""
     entities = [
         VeSyncFanEntity(dev, coordinator)
-        for dev in devices 
-            if (dev.device_type in humid_features) or (dev.device_type in air_features)
+        for dev in devices
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
     ]
 
     async_add_entities(entities, update_before_add=True)

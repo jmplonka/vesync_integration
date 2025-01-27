@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

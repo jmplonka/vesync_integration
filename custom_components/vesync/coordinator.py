@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from .pyvesync import VeSync
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -18,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
-    def __init__(self, hass: HomeAssistant, manager: VeSync) -> None:
+    def __init__(self, hass: HomeAssistant, manager) -> None:
         """Initialize."""
         self._manager = manager
 
@@ -40,4 +38,4 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
         self._manager.update_all_devices()
         # VeSync updates energy on applicable devices every 6 hours
-        self._manager.update_energy()   
+        self._manager.update_energy()

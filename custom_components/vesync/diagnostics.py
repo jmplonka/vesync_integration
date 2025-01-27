@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .pyvesync import VeSync
+from pyvesync import VeSync
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN, VS_MANAGER
 from .entity import VeSyncBaseDevice
 
-KEYS_TO_REDACT = {"manager", "uuid", "mac_id"}
+KEYS_TO_REDACT = {"manager", "uuid", "mac_id", "cid"}
 
 
 async def async_get_config_entry_diagnostics(

@@ -1,6 +1,6 @@
 """Common entity for VeSync Component."""
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

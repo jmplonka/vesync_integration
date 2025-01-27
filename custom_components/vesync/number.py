@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.number import (
     NumberEntity,

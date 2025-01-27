@@ -2,8 +2,7 @@
 
 import logging
 
-from .pyvesync import VeSync
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_generate_device_list(
-    hass: HomeAssistant, manager: VeSync
+    hass: HomeAssistant, manager
 ) -> list[VeSyncBaseDevice]:
     """Assign devices to proper component."""
     devices: list[VeSyncBaseDevice] = []
@@ -23,9 +22,9 @@ async def async_generate_device_list(
     devices.extend(manager.fans)
     devices.extend(manager.bulbs)
     devices.extend(manager.outlets)
+ #  devices.extend(manager.kitchen)
     devices.extend(manager.switches)
-    
- 
+
     return devices
 
 

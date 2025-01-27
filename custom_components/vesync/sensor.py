@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from .pyvesync_basedevice import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -106,12 +106,12 @@ def sku_supported(device, supported):
     return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
 
 
-def is_smart_socket(device) -> bool:
+def is_smart_outlet(device) -> bool:
     """Get the homeassistant device_type for a given device."""
     return device.device_type in outlet_config
 
 def has_energy_period(device) -> bool:
-    if (is_smart_socket(device)):
+    if (is_smart_outlet(device)):
         return device.has_energy_period
     return False
 
@@ -174,7 +174,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.voltage,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_socket(device),
+        exists_fn=lambda device: is_smart_outlet(device),
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -184,7 +184,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.power,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_socket(device),
+        exists_fn=lambda device: is_smart_outlet(device),
     ),
     VeSyncSensorEntityDescription(
         key="energy",
@@ -194,7 +194,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.energy_today,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_socket(device),
+        exists_fn=lambda device: is_smart_outlet(device),
     ),
     VeSyncSensorEntityDescription(
         key="energy-weekly",

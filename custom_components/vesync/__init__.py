@@ -17,7 +17,7 @@ from .const import (
     VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
-from .pyvesync import VeSync
+from pyvesync import VeSync
 
 PLATFORMS = [
     Platform.FAN,
@@ -35,8 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up VeSync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
+
     time_zone = str(hass.config.time_zone)
-    
+
     manager = VeSync(username, password, time_zone)
 
     login = await hass.async_add_executor_job(manager.login)
@@ -51,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Store coordinator at domain level since only single integration instance is permitted.
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
-
     hass.data[DOMAIN][VS_DEVICES] = await async_generate_device_list(hass, manager)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
