@@ -4,6 +4,8 @@ import logging
 from typing import Any
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncoutlet import outlet_config
+from pyvesync.vesyncswitch import feature_dict
 
 from homeassistant.components.switch import (
     SwitchEntity,
@@ -19,8 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
-from .pyvesync_outlet import outlet_config
-from .pyvesync_switch import feature_dict
 
 _LOGGER = logging.getLogger(__name__)
 

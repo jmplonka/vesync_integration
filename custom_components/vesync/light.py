@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncbulb import feature_dict
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,7 +21,6 @@ from homeassistant.util import color as color_util
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
-from .pyvesync_bulb import feature_dict
 
 _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds

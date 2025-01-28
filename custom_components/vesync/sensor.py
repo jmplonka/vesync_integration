@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncoutlet import outlet_config
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,7 +39,6 @@ from .const import (
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
-from .pyvesync_outlet import outlet_config
 
 _LOGGER = logging.getLogger(__name__)
 
