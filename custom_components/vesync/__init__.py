@@ -1,5 +1,9 @@
 """VeSync integration."""
 
+from .cleanup import reinstall_pyvesync
+reinstall_pyvesync()
+
+
 import logging
 
 from homeassistant.config_entries import ConfigEntry
