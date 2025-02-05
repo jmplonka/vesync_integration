@@ -15,17 +15,9 @@ async def async_generate_device_list(
     hass: HomeAssistant, manager
 ) -> list[VeSyncBaseDevice]:
     """Assign devices to proper component."""
-    devices: list[VeSyncBaseDevice] = []
-
     await hass.async_add_executor_job(manager.update)
 
-    devices.extend(manager.fans)
-    devices.extend(manager.bulbs)
-    devices.extend(manager.outlets)
- #  devices.extend(manager.kitchen)
-    devices.extend(manager.switches)
-
-    return devices
+    return manager.device_list
 
 
 def is_humidifier(device: VeSyncBaseDevice) -> bool:

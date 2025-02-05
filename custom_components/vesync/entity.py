@@ -15,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
-    _attr_has_entity_name = True
+    # The base VeSyncBaseEntity has _attr_has_entity_name and this is to follow the device name
+    _attr_name: str = None
+    _attr_has_entity_name: bool = True
+    _attr_unique_id: str
+    device: VeSyncBaseDevice
 
     def __init__(
         self, device: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator

@@ -177,6 +177,16 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: is_smart_outlet(device),
     ),
     VeSyncSensorEntityDescription(
+        key="Current",
+        translation_key="current_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.current,
+        update_fn=update_details,
+        exists_fn=lambda device: is_smart_outlet(device),
+    ),
+    VeSyncSensorEntityDescription(
         key="power",
         translation_key="current_power",
         device_class=SensorDeviceClass.POWER,
@@ -239,6 +249,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
 
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     """Representation of a sensor describing a VeSync device."""
+
+    _attr_name = None
+    _attr_unique_id: str
 
     entity_description: VeSyncSensorEntityDescription
 

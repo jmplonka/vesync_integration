@@ -15,8 +15,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from .pyvesync.vesyncoutlet import outlet_config
-from .pyvesync.vesyncswitch import feature_dict
+from .pyvesync.helpers import EDeviceFamily
 
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
@@ -66,11 +65,11 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is a switch and add entity."""
-    entities: list[VeSyncBaseSwitch] = []
+    entities: list[VeSyncSwitchEntity] = []
     for dev in devices:
-        if (dev.device_type in outlet_config):
+        if (dev.device_family == EDeviceFamily.OUTLET):
             entities.append(VeSyncSwitchEntity(dev, coordinator, OUTLET))
-        elif (dev.device_type in feature_dict):
+        elif (dev.device_family == EDeviceFamily.SWITCH):
             entities.append(VeSyncSwitchEntity(dev, coordinator, SWITCH))
 
     async_add_entities(entities, update_before_add=True)
@@ -80,6 +79,8 @@ class VeSyncSwitchEntity(VeSyncBaseEntity, SwitchEntity):
     """Representation of a VeSync outlet or switch."""
 
     _attr_name = None
+
+    entity_description: SwitchEntityDescription
 
     def __init__(
         self,

@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .pyvesync import VeSync
 
-from .const import DOMAIN, VS_MANAGER
+from .const import DOMAIN, VS_MANAGER, VS_DEVICES
 from .entity import VeSyncBaseDevice
 
 KEYS_TO_REDACT = {"manager", "uuid", "mac_id", "cid"}
@@ -32,12 +32,7 @@ async def async_get_config_entry_diagnostics(
             "switch_count": len(manager.switches),
             "timezone": manager.time_zone,
         },
-        "devices": {
-            "bulbs": [_redact_device_values(device) for device in manager.bulbs],
-            "fans": [_redact_device_values(device) for device in manager.fans],
-            "outlets": [_redact_device_values(device) for device in manager.outlets],
-            "switches": [_redact_device_values(device) for device in manager.switches],
-        },
+        VS_DEVICES: [_redact_device_values(device) for device in manager.device_list],
     }
 
 
@@ -99,10 +94,7 @@ async def async_get_device_diagnostics(
 
 def _build_device_dict(manager: VeSync) -> dict:
     """Build a dictionary of ALL VeSync devices."""
-    device_dict = {x.cid: x for x in manager.switches}
-    device_dict.update({x.cid: x for x in manager.fans})
-    device_dict.update({x.cid: x for x in manager.outlets})
-    device_dict.update({x.cid: x for x in manager.bulbs})
+    device_dict = {x.cid: x for x in manager.device_list}
     return device_dict
 
 

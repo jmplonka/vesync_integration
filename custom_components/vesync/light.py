@@ -55,13 +55,13 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is a light and add entity."""
-    entities: list[VeSyncBaseLightHA] = []
+    entities: list[VeSyncBaseLightEntity] = []
     for dev in devices:
         model = feature_dict.get(dev.device_type)
         if (model):
             features = model['features']
             if ('color_temp' in features):
-                entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
+                entities.append(VeSyncTunableWhiteLightEntity(dev, coordinator))
 #            elif ('rgb_shift' in model['features']):
 #                entities.append(VeSyncBaseLightEntity(dev, coordinator))
             else:

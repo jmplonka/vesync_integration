@@ -76,7 +76,7 @@ class VeSync:  # pylint: disable=function-redefined
             kitchen : list
                 List of VeSyncKitchen objects for smart kitchen appliances
             dev_list : dict
-                Dictionary of device lists
+                List of VeSyncBaseDevice obejcts (all devices)
             token : str
                 VeSync API token
             account_id : str

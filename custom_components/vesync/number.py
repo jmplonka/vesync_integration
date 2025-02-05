@@ -88,6 +88,7 @@ def _setup_entities(
 class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
     """A class to set numeric options on VeSync device."""
 
+    _attr_unique_id: str
     entity_description: VeSyncNumberEntityDescription
 
     def __init__(
