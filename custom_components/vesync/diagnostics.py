@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyvesync import VeSync
-
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+
+from .pyvesync import VeSync
 
 from .const import DOMAIN, VS_MANAGER
 from .entity import VeSyncBaseDevice

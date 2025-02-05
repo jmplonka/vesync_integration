@@ -12,6 +12,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
-  "requirements": [],
+  "requirements": ["pyvesync@git+https://github.com/jmplonka/pyvesync.git"],
   "version": "2015.1.1"
 }

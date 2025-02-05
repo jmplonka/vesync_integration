@@ -24,23 +24,26 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "current_voltage": {
+        "name": "actual voltage"
+      },
+      "current_current": {
+        "name": "actual current"
+      },
       "current_power": {
-        "name": "Current power"
+        "name": "actual power"
       },
       "energy_today": {
-        "name": "Energy use today"
+        "name": "Energy consumption today"
       },
       "energy_week": {
-        "name": "Energy use weekly"
+        "name": "Energy consumption last 7 days"
       },
       "energy_month": {
-        "name": "Energy use monthly"
+        "name": "Energy consumption last 12 month"
       },
       "energy_year": {
-        "name": "Energy use yearly"
-      },
-      "current_voltage": {
-        "name": "Current voltage"
+        "name": "Energy consumption last years"
       }
     },
     "number": {

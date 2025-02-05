@@ -1,9 +1,5 @@
 """VeSync integration."""
 
-from .cleanup import reinstall_pyvesync
-reinstall_pyvesync()
-
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +17,7 @@ from .const import (
     VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
-from pyvesync import VeSync
+from .pyvesync import VeSync
 
 PLATFORMS = [
     Platform.FAN,

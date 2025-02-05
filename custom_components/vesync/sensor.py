@@ -6,9 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncoutlet import outlet_config
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,6 +25,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from .pyvesync.vesyncoutlet import outlet_config
 
 from .common import is_humidifier
 from .const import (

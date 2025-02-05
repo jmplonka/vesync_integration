@@ -3,8 +3,6 @@
 import logging
 from typing import Any
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     MODE_AUTO,
@@ -18,6 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from .common import is_humidifier
 from .const import (

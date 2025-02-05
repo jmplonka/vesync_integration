@@ -1,6 +1,6 @@
 """Constants for VeSync Component."""
 
-from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+from .pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
 
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"

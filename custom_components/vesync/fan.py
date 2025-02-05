@@ -6,8 +6,6 @@ import logging
 import math
 from typing import Any
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -18,6 +16,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from .const import (
     DOMAIN,

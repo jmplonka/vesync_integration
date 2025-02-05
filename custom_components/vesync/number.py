@@ -4,8 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -15,6 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from .common import is_humidifier
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY

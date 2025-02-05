@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from pyvesync import VeSync
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+from .pyvesync import VeSync
 
 from .const import DOMAIN
 

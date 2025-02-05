@@ -2,9 +2,9 @@
 
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
 from homeassistant.core import HomeAssistant
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from .const import VeSyncHumidifierDevice
 

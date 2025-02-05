@@ -3,10 +3,6 @@
 import logging
 from typing import Any
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncoutlet import outlet_config
-from pyvesync.vesyncswitch import feature_dict
-
 from homeassistant.components.switch import (
     SwitchEntity,
     SwitchDeviceClass,
@@ -17,6 +13,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from .pyvesync.vesyncoutlet import outlet_config
+from .pyvesync.vesyncswitch import feature_dict
 
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
