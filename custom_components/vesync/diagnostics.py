@@ -12,6 +12,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .pyvesync import VeSync
 from .pyvesync.vesync_enums import EDeviceFamily
+
 from .const import DOMAIN, VS_MANAGER, VS_DEVICES
 from .entity import VeSyncBaseDevice
 
@@ -23,23 +24,27 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-    devices = {}
-    counts = {family: 0 for family in EDeviceFamily}
-    for family in EDeviceFamily:
-        devices[family.value] = [device for device in manager.device_list if device.device_family == family]
-        counts[family] += 1
+    try:
+        manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
+        devices = {}
+        counts = {family: 0 for family in EDeviceFamily}
+        for family in EDeviceFamily:
+            devices[family.value] = [device for device in manager.device_list if device.device_family == family]
+            counts[family] += 1
 
-    return {
-        DOMAIN: {
-            "bulb_count": counts[EDeviceFamily.BULB],
-            "fan_count": counts[EDeviceFamily.FAN],
-            "outlets_count": counts[EDeviceFamily.OUTLET],
-            "switch_count": counts[EDeviceFamily.SWITCH],
-            "timezone": manager.time_zone,
-        },
-        VS_DEVICES: devices
-    }
+        return {
+            DOMAIN: {
+                "bulb_count": counts[EDeviceFamily.BULB],
+                "fan_count": counts[EDeviceFamily.FAN],
+                "outlets_count": counts[EDeviceFamily.OUTLET],
+                "switch_count": counts[EDeviceFamily.SWITCH],
+                "timezone": manager.time_zone,
+            },
+            VS_DEVICES: devices
+        }
+    except Exception as ex:
+        _LOGGER.critical('VeSync.common: %s', ex)
+        return []
 
 
 async def async_get_device_diagnostics(
@@ -100,17 +105,23 @@ async def async_get_device_diagnostics(
 
 def _build_device_dict(manager: VeSync) -> dict:
     """Build a dictionary of ALL VeSync devices."""
-    device_dict = {x.cid: x for x in manager.device_list}
-    return device_dict
+    try:
+        return {x.cid: x for x in manager.device_list}
+    except Exception as ex:
+        _LOGGER.critical('VeSync.common: %s', ex)
+        return {}
 
 
 def _redact_device_values(device: VeSyncBaseDevice) -> dict:
     """Rebuild and redact values of a VeSync device."""
     data = {}
-    for key, item in device.__dict__.items():
-        if key not in KEYS_TO_REDACT:
-            data[key] = item
-        else:
-            data[key] = REDACTED
+    try:
+        for key, item in device.__dict__.items():
+            if key not in KEYS_TO_REDACT:
+                data[key] = item
+            else:
+                data[key] = REDACTED
+    except Exception as ex:
+        _LOGGER.critical('VeSync.common: %s', ex)
 
     return data

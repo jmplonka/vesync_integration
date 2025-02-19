@@ -40,7 +40,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow start."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason="Only one instance supported.")
 
         if not user_input:
             return self._show_form()

@@ -168,7 +168,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_family == EDeviceFamily.OUTLET,
     ),
     VeSyncSensorEntityDescription(
-        key="Current",
+        key="current",
         translation_key="current_current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,

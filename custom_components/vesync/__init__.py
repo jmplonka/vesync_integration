@@ -32,59 +32,64 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up VeSync as config entry."""
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
+    try:
+        username = config_entry.data[CONF_USERNAME]
+        password = config_entry.data[CONF_PASSWORD]
 
-    time_zone = str(hass.config.time_zone)
+        time_zone = str(hass.config.time_zone)
 
-    manager = VeSync(username, password, time_zone)
+        manager = VeSync(username, password, time_zone)
 
-    login = await hass.async_add_executor_job(manager.login)
-    if not login:
-        _LOGGER.error("VeSync: unable to login on server")
-        return False
+        login = await hass.async_add_executor_job(manager.login)
+        if not login:
+            _LOGGER.error("VeSync: unable to login on server")
+            return False
 
-    manager.update()
+        manager.update()
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
+        coordinator = VeSyncDataCoordinator(hass, manager)
 
-    coordinator = VeSyncDataCoordinator(hass, manager)
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][VS_MANAGER] = manager
 
-    # Store coordinator at domain level since only single integration
-    # instance is permitted.
-    hass.data[DOMAIN][VS_COORDINATOR] = coordinator
-    hass.data[DOMAIN][VS_DEVICES] = manager.device_list
+        # Store coordinator at domain level since only single integration
+        # instance is permitted.
+        hass.data[DOMAIN][VS_COORDINATOR] = coordinator
+        hass.data[DOMAIN][VS_DEVICES] = manager.device_list
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def async_new_device_discovery(service: ServiceCall) -> None:
-        """Discover if new devices should be added."""
-        manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-        devices:list = hass.data[DOMAIN][VS_DEVICES]
+        async def async_new_device_discovery(service: ServiceCall) -> None:
+            """Discover if new devices should be added."""
+            manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
+            devices: list = hass.data[DOMAIN][VS_DEVICES]
 
-        registered_devices = await manager.device_list
+            device_set = set(manager.device_list)
+            new_devices = list(device_set.difference(devices))
+            if new_devices and devices:
+                devices.extend(new_devices)
+                async_dispatcher_send(hass, FMT_DISCOVERY(VS_DEVICES), new_devices)
+                return
+            if new_devices and not devices:
+                devices.extend(new_devices)
 
-        device_set = set(registered_devices)
-        new_devices = list(device_set.difference(devices))
-        if new_devices and devices:
-            devices.extend(new_devices)
-            async_dispatcher_send(hass, FMT_DISCOVERY(VS_DEVICES), new_devices)
-            return
-        if new_devices and not devices:
-            devices.extend(new_devices)
+        hass.services.async_register(
+            DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
+        )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
-    )
-
+    except Exception as ex:
+        _LOGGER.exception(ex)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data.pop(DOMAIN)
+    try:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        if unload_ok:
+            hass.data.pop(DOMAIN)
 
-    return unload_ok
+        return unload_ok
+    except Exception as ex:
+        _LOGGER.critical('VeSync.common: %s', ex)
+        return True

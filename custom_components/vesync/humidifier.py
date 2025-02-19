@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .pyvesync.const import (
     MODE_AUTO as VS_HUMIDIFIER_MODE_AUTO,
     MODE_HUMIDITY as VS_HUMIDIFIER_MODE_HUMIDITY,
@@ -27,6 +26,7 @@ from .pyvesync.const import (
 )
 from .pyvesync.vesyncfan import VeSyncHumidifier
 
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
