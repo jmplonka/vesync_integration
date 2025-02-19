@@ -18,19 +18,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-
-from .common import is_humidifier
-from .const import (
-    DOMAIN,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-    VS_HUMIDIFIER_MODE_AUTO,
-    VS_HUMIDIFIER_MODE_HUMIDITY,
-    VS_HUMIDIFIER_MODE_MANUAL,
-    VS_HUMIDIFIER_MODE_SLEEP,
-    VeSyncHumidifierDevice,
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
+from .pyvesync.const import (
+    MODE_AUTO as VS_HUMIDIFIER_MODE_AUTO,
+    MODE_HUMIDITY as VS_HUMIDIFIER_MODE_HUMIDITY,
+    MODE_MANUAL as VS_HUMIDIFIER_MODE_MANUAL,
+    MODE_SLEEP as VS_HUMIDIFIER_MODE_SLEEP
 )
+from .pyvesync.vesyncfan import VeSyncHumidifier
+
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -67,7 +63,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -81,7 +77,7 @@ def _setup_entities(
 ):
     """Add humidifier entities."""
     async_add_entities(
-        VeSyncHumidifierHA(dev, coordinator) for dev in devices if is_humidifier(dev)
+        VeSyncHumidifierEntity(dev, coordinator) for dev in devices if isinstance(dev, VeSyncHumidifier)
     )
 
 
@@ -96,17 +92,22 @@ def _get_vs_mode(ha_mode: str) -> str | None:
     return HA_TO_VS_MODE_MAP.get(ha_mode)
 
 
-class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
+class VeSyncHumidifierEntity(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
-
-    # The base VeSyncBaseEntity has _attr_has_entity_name and this is to follow the device name
-    _attr_name = None
 
     _attr_max_humidity = MAX_HUMIDITY
     _attr_min_humidity = MIN_HUMIDITY
     _attr_supported_features = HumidifierEntityFeature.MODES
 
-    device: VeSyncHumidifierDevice
+    device: VeSyncHumidifier
+
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize Base Switch device class."""
+        super().__init__(device, coordinator, None)
 
     @property
     def available_modes(self) -> list[str]:

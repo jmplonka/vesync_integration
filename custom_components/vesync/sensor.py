@@ -18,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
 )
@@ -27,15 +28,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from .pyvesync.vesyncoutlet import outlet_config
+from .pyvesync.vesyncfan import VeSyncHumidifier
+from .pyvesync.helpers import EDeviceFamily
+from .pyvesync.const import MODE_HUMIDITY
 
-from .common import is_humidifier
 from .const import (
     DOMAIN,
     SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
     VS_DEVICES,
-    VS_DISCOVERY,
+    FMT_DISCOVERY,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -58,7 +60,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -74,7 +76,7 @@ def _setup_entities(
 
     async_add_entities(
         (
-            VeSyncSensorEntity(dev, description, coordinator)
+            VeSyncSensorEntity(dev, coordinator, description)
             for dev in devices
             for description in SENSORS
             if description.exists_fn(dev)
@@ -88,7 +90,6 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     """Describe VeSync sensor entity."""
 
     value_fn: Callable[[VeSyncBaseDevice], StateType]
-
     exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
     update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
 
@@ -104,16 +105,6 @@ def update_details(device):
 def sku_supported(device, supported):
     """Get the base device of which a device is an instance."""
     return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
-
-
-def is_smart_outlet(device) -> bool:
-    """Get the homeassistant device_type for a given device."""
-    return device.device_type in outlet_config
-
-def has_energy_period(device) -> bool:
-    if (is_smart_outlet(device)):
-        return device.has_energy_period
-    return False
 
 FILTER_LIFE_SUPPORTED = [
     "LV-PUR131S",
@@ -155,8 +146,8 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="air-quality",
         translation_key="air_quality",
-        value_fn=lambda device: device.details["air_quality"],
-        exists_fn=lambda device: sku_supported(device, AIR_QUALITY_SUPPORTED),
+        value_fn=lambda device: device.details['air_quality'],
+        exists_fn=lambda device: device.supports('air_quality'),
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
@@ -174,17 +165,17 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.voltage,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_outlet(device),
+        exists_fn=lambda device: device.device_family == EDeviceFamily.OUTLET,
     ),
     VeSyncSensorEntityDescription(
         key="Current",
         translation_key="current_current",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.current,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_outlet(device),
+        exists_fn=lambda device: device.device_family == EDeviceFamily.OUTLET,
     ),
     VeSyncSensorEntityDescription(
         key="power",
@@ -194,7 +185,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.power,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_outlet(device),
+        exists_fn=lambda device: device.device_family == EDeviceFamily.OUTLET,
     ),
     VeSyncSensorEntityDescription(
         key="energy",
@@ -204,7 +195,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.energy_today,
         update_fn=update_details,
-        exists_fn=lambda device: is_smart_outlet(device),
+        exists_fn=lambda device: device.device_family == EDeviceFamily.OUTLET,
     ),
     VeSyncSensorEntityDescription(
         key="energy-weekly",
@@ -214,7 +205,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.weekly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: has_energy_period(device),
+        exists_fn=lambda device: device.supports('energyHistory'),
     ),
     VeSyncSensorEntityDescription(
         key="energy-monthly",
@@ -224,7 +215,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.monthly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: has_energy_period(device),
+        exists_fn=lambda device: device.supports('energyHistory'),
     ),
     VeSyncSensorEntityDescription(
         key="energy-yearly",
@@ -234,15 +225,15 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.yearly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: has_energy_period(device),
+        exists_fn=lambda device: device.supports('energyHistory'),
     ),
     VeSyncSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: device.details["humidity"],
-        exists_fn=is_humidifier,
+        value_fn=lambda device: device.details[MODE_HUMIDITY],
+        exists_fn=lambda device: isinstance(device, VeSyncHumidifier),
     ),
 )
 
@@ -250,7 +241,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     """Representation of a sensor describing a VeSync device."""
 
-    _attr_name = None
     _attr_unique_id: str
 
     entity_description: VeSyncSensorEntityDescription
@@ -258,8 +248,8 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     def __init__(
         self,
         device: VeSyncBaseDevice,
-        description: VeSyncSensorEntityDescription,
         coordinator: VeSyncDataCoordinator,
+        description: VeSyncSensorEntityDescription
     ) -> None:
         """Initialize the VeSync outlet device."""
         super().__init__(device, coordinator)

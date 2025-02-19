@@ -18,46 +18,14 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from .pyvesync.const import MODE_AUTO, MODE_SLEEP, MODE_PET, MODE_TURBO, MODE_MANUAL
 from .pyvesync.helpers import EDeviceFamily
 
-from .const import (
-    DOMAIN,
-    SKU_TO_BASE_DEVICE,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-)
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-FAN_MODE_AUTO = "auto"
-FAN_MODE_SLEEP = "sleep"
-FAN_MODE_PET = "pet"
-FAN_MODE_TURBO = "turbo"
-
-PRESET_MODES = {
-    "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core200S": [FAN_MODE_SLEEP],
-    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "EverestAir": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO],
-    "Vital200S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
-    "Vital100S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
-}
-SPEED_RANGE = {  # off is not included
-    "LV-PUR131S": (1, 3),
-    "Core200S": (1, 3),
-    "Core300S": (1, 3),
-    "Core400S": (1, 4),
-    "Core600S": (1, 4),
-    "EverestAir": (1, 3),
-    "Vital200S": (1, 4),
-    "Vital100S": (1, 4),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -74,7 +42,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -117,36 +85,32 @@ class VeSyncFanEntity(VeSyncBaseEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.device_status == "on"
+        return self.device.is_on
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed."""
         if (
-            self.device.mode == "manual"
+            self.device.mode == MODE_MANUAL
             and (current_level := self.device.fan_level) is not None
         ):
-            return ranged_value_to_percentage(
-                SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
-            )
+            return ranged_value_to_percentage(self.device.mist_levels, current_level)
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(
-            SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]]
-        )
+        return int_states_in_range(self.device.mist_levels)
 
     @property
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
+        return self.device.mist_modes
 
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if self.device.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO):
+        if self.device.mode in self.device.mist_modes:
             return self.device.mode
         return None
 
@@ -188,11 +152,7 @@ class VeSyncFanEntity(VeSyncBaseEntity, FanEntity):
 
         self.device.manual_mode()
         self.device.change_fan_speed(
-            math.ceil(
-                percentage_to_ranged_value(
-                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
-                )
-            )
+            math.ceil(percentage_to_ranged_value(self.device.mist_levels, percentage))
         )
         self.schedule_update_ha_state()
 
@@ -207,13 +167,13 @@ class VeSyncFanEntity(VeSyncBaseEntity, FanEntity):
         if not self.device.is_on:
             self.device.turn_on()
 
-        if preset_mode == FAN_MODE_AUTO:
+        if preset_mode == MODE_AUTO:
             self.device.auto_mode()
-        elif preset_mode == FAN_MODE_SLEEP:
+        elif preset_mode == MODE_SLEEP:
             self.device.sleep_mode()
-        elif preset_mode == FAN_MODE_PET:
+        elif preset_mode == MODE_PET:
             self.device.pet_mode()
-        elif preset_mode == FAN_MODE_TURBO:
+        elif preset_mode == MODE_TURBO:
             self.device.turbo_mode()
 
         self.schedule_update_ha_state()

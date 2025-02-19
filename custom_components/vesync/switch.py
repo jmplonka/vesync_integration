@@ -1,7 +1,6 @@
 """Support for VeSync switches and outlets."""
 
 import logging
-from typing import Any
 
 from homeassistant.components.switch import (
     SwitchEntity,
@@ -11,13 +10,12 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from .pyvesync.helpers import EDeviceFamily
+from .pyvesync.vesync_enums import EDeviceFamily
 
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -37,13 +35,16 @@ SWITCH = SwitchEntityDescription(
     icon="mdi:light-switch"
 )
 
+DEVICE_FAMILIES: dict[EDeviceFamily, SwitchEntityDescription] = {
+    EDeviceFamily.OUTLET: OUTLET,
+    EDeviceFamily.SWITCH: SWITCH
+}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
@@ -52,7 +53,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -67,20 +68,16 @@ def _setup_entities(
     """Check if device is a switch and add entity."""
     entities: list[VeSyncSwitchEntity] = []
     for dev in devices:
-        if (dev.device_family == EDeviceFamily.OUTLET):
-            entities.append(VeSyncSwitchEntity(dev, coordinator, OUTLET))
-        elif (dev.device_family == EDeviceFamily.SWITCH):
-            entities.append(VeSyncSwitchEntity(dev, coordinator, SWITCH))
+        family = DEVICE_FAMILIES.get(dev.device_family)
+        if (family is not None):
+            entity = VeSyncSwitchEntity(dev, coordinator, family)
+            entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncSwitchEntity(VeSyncBaseEntity, SwitchEntity):
     """Representation of a VeSync outlet or switch."""
-
-    _attr_name = None
-
-    entity_description: SwitchEntityDescription
 
     def __init__(
         self,
@@ -89,25 +86,4 @@ class VeSyncSwitchEntity(VeSyncBaseEntity, SwitchEntity):
         description: SwitchEntityDescription
     ) -> None:
         """Initialize Base Switch device class."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self.device.device_status == "on"
-
-    def turn_on(self) -> bool:
-        """Turn the device on."""
-        turn = self.device.turn_on()
-        if (not turn):
-            _LOGGER.error(f"VeSync: can't turn {self.device.device_name} on!")
-        return turn
-
-    def turn_off(self) -> bool:
-        """Turn the device off."""
-        turn = self.device.turn_off()
-        if (not turn):
-            _LOGGER.error(f"VeSync: can't turn {self.device.device_name} off!")
-        return turn
-
+        super().__init__(device, coordinator, description)

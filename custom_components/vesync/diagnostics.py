@@ -11,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .pyvesync import VeSync
-
+from .pyvesync.vesync_enums import EDeviceFamily
 from .const import DOMAIN, VS_MANAGER, VS_DEVICES
 from .entity import VeSyncBaseDevice
 
@@ -19,20 +19,26 @@ KEYS_TO_REDACT = {"manager", "uuid", "mac_id", "cid"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
+    devices = {}
+    counts = {family: 0 for family in EDeviceFamily}
+    for family in EDeviceFamily:
+        devices[family.value] = [device for device in manager.device_list if device.device_family == family]
+        counts[family] += 1
 
     return {
         DOMAIN: {
-            "bulb_count": len(manager.bulbs),
-            "fan_count": len(manager.fans),
-            "outlets_count": len(manager.outlets),
-            "switch_count": len(manager.switches),
+            "bulb_count": counts[EDeviceFamily.BULB],
+            "fan_count": counts[EDeviceFamily.FAN],
+            "outlets_count": counts[EDeviceFamily.OUTLET],
+            "switch_count": counts[EDeviceFamily.SWITCH],
             "timezone": manager.time_zone,
         },
-        VS_DEVICES: [_redact_device_values(device) for device in manager.device_list],
+        VS_DEVICES: devices
     }
 
 
@@ -42,7 +48,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
     device_dict = _build_device_dict(manager)
-    vesync_device_id = next(iden[1] for iden in device.identifiers if iden[0] == DOMAIN)
+    vesync_device_id = next(id[1] for id in device.identifiers if id[0] == DOMAIN)
 
     # Base device information, without sensitive information.
     data = _redact_device_values(device_dict[vesync_device_id])

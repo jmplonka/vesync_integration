@@ -16,9 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from .pyvesync.vesyncbulb import feature_dict
+from .pyvesync.vesync_enums import EDeviceFamily
 
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -57,12 +57,10 @@ def _setup_entities(
     """Check if device is a light and add entity."""
     entities: list[VeSyncBaseLightEntity] = []
     for dev in devices:
-        model = feature_dict.get(dev.device_type)
-        if (model):
-            features = model['features']
-            if ('color_temp' in features):
+        if (dev.device_family == EDeviceFamily.BULB):
+            if dev.supports('color_temp'):
                 entities.append(VeSyncTunableWhiteLightEntity(dev, coordinator))
-#            elif ('rgb_shift' in model['features']):
+#            elif (dev.supports('rgb_shift'):
 #                entities.append(VeSyncBaseLightEntity(dev, coordinator))
             else:
                 entities.append(VeSyncDimmableLightEntity(dev, coordinator))
@@ -73,12 +71,13 @@ def _setup_entities(
 class VeSyncBaseLightEntity(VeSyncBaseEntity, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
-    _attr_name = None
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self.device.device_status == "on"
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator
+    ) -> None:
+        """Initialize Base Switch device class."""
+        super().__init__(device, coordinator, None)
 
     @property
     def brightness(self) -> int:

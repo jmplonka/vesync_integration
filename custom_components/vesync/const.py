@@ -1,12 +1,10 @@
 """Constants for VeSync Component."""
 
-from .pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+DOMAIN: str = "vesync"
+FMT_DISCOVERY: function = "vesync_discovery_{}".format
+SERVICE_UPDATE_DEVS: str = "update_devices"
 
-DOMAIN = "vesync"
-VS_DISCOVERY = "vesync_discovery_{}"
-SERVICE_UPDATE_DEVS = "update_devices"
-
-UPDATE_INTERVAL = 60 # seconds
+UPDATE_INTERVAL = 60  # in seconds
 """
 Update interval for DataCoordinator.
 
@@ -19,18 +17,10 @@ total would be 2880.
 Using 30 seconds interval gives 8640 for 3 devices which
 exceeds the quota of 7700.
 """
-VS_DEVICES = "devices"
-VS_COORDINATOR = "coordinator"
-VS_MANAGER = "manager"
-VS_NUMBERS = "numbers"
-
-VS_HUMIDIFIER_MODE_AUTO = "auto"
-VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
-VS_HUMIDIFIER_MODE_MANUAL = "manual"
-VS_HUMIDIFIER_MODE_SLEEP = "sleep"
-
-VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
-"""Humidifier device types"""
+VS_DEVICES: str = "devices"
+VS_COORDINATOR: str = "coordinator"
+VS_MANAGER: str = "manager"
+VS_NUMBERS: str = "numbers"
 
 SKU_TO_BASE_DEVICE = {
     # Air Purifiers

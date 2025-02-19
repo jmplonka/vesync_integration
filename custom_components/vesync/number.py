@@ -15,9 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from .pyvesync.vesyncfan import VeSyncHumidifier
 
-from .common import is_humidifier
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, FMT_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -31,7 +31,12 @@ class VeSyncNumberEntityDescription(NumberEntityDescription):
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     value_fn: Callable[[VeSyncBaseDevice], float]
     set_value_fn: Callable[[VeSyncBaseDevice, float], bool]
-
+    key: str
+    translation_key: str
+    native_min_value: int
+    native_max_value: int
+    native_step: int
+    mode: NumberMode
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
@@ -41,7 +46,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         native_max_value=9,
         native_step=1,
         mode=NumberMode.SLIDER,
-        exists_fn=is_humidifier,
+        exists_fn=lambda device: isinstance(device, VeSyncHumidifier),
         set_value_fn=lambda device, value: device.set_mist_level(value),
         value_fn=lambda device: device.mist_level,
     )
@@ -54,7 +59,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities."""
-
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
@@ -63,7 +67,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
+        async_dispatcher_connect(hass, FMT_DISCOVERY(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
@@ -76,9 +80,8 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Add number entities."""
-
     async_add_entities(
-        VeSyncNumberEntity(dev, description, coordinator)
+        VeSyncNumberEntity(dev, coordinator, description)
         for dev in devices
         for description in NUMBER_DESCRIPTIONS
         if description.exists_fn(dev)
@@ -88,18 +91,14 @@ def _setup_entities(
 class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
     """A class to set numeric options on VeSync device."""
 
-    _attr_unique_id: str
-    entity_description: VeSyncNumberEntityDescription
-
     def __init__(
         self,
         device: VeSyncBaseDevice,
-        description: VeSyncNumberEntityDescription,
         coordinator: VeSyncDataCoordinator,
+        description: VeSyncNumberEntityDescription
     ) -> None:
         """Initialize the VeSync number device."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
+        super().__init__(device, coordinator, description)
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property

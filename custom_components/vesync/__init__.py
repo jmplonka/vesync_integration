@@ -7,13 +7,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .common import async_generate_device_list
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
     VS_COORDINATOR,
     VS_DEVICES,
-    VS_DISCOVERY,
+    FMT_DISCOVERY,
     VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
@@ -45,29 +44,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("VeSync: unable to login on server")
         return False
 
+    manager.update()
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
     coordinator = VeSyncDataCoordinator(hass, manager)
 
-    # Store coordinator at domain level since only single integration instance is permitted.
+    # Store coordinator at domain level since only single integration
+    # instance is permitted.
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
-    hass.data[DOMAIN][VS_DEVICES] = await async_generate_device_list(hass, manager)
+    hass.data[DOMAIN][VS_DEVICES] = manager.device_list
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
-        manager = hass.data[DOMAIN][VS_MANAGER]
-        devices = hass.data[DOMAIN][VS_DEVICES]
+        manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
+        devices:list = hass.data[DOMAIN][VS_DEVICES]
 
-        registered_devices = await async_generate_device_list(hass, manager)
+        registered_devices = await manager.device_list
 
         device_set = set(registered_devices)
         new_devices = list(device_set.difference(devices))
         if new_devices and devices:
             devices.extend(new_devices)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
+            async_dispatcher_send(hass, FMT_DISCOVERY(VS_DEVICES), new_devices)
             return
         if new_devices and not devices:
             devices.extend(new_devices)
@@ -81,7 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)

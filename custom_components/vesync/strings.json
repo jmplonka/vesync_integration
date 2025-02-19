@@ -44,6 +44,12 @@
       },
       "energy_year": {
         "name": "Energy consumption last years"
+      },
+      "humidity": {
+        "name": "actual humidity"
+      },
+      "pm25": {
+        "name": "Particulate matter <= 2.5 μm"
       }
     },
     "number": {
